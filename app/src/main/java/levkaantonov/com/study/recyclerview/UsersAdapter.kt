@@ -66,10 +66,6 @@ class UsersAdapter(private val actionListener: UserActionListener) :
                 Menu.NONE,
                 context.getString(R.string.popup_menu_remove)
             )
-                .apply {
-
-                }
-
             setOnMenuItemClickListener {
                 when (it.itemId) {
                     ID_MOVE_UP -> {
@@ -87,7 +83,6 @@ class UsersAdapter(private val actionListener: UserActionListener) :
                     else -> true
                 }
             }
-
             show()
         }
     }
