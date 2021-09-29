@@ -28,11 +28,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <Space
-        android:layout_width="wrap_content"
-        android:layout_height="6dp"
-        app:layout_constraintTop_toBottomOf="@id/barrier" />
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="4dp"
+        app:layout_constraintStart_toStartOf="@id/ivMoreButton"
+        app:layout_constraintTop_toTopOf="@id/ivMoreButton"
+        app:layout_constraintEnd_toEndOf="@id/ivMoreButton"
+        app:layout_constraintBottom_toBottomOf="@id/ivMoreButton"/>
 
     <TextView
         android:id="@+id/tvUserCompany"
@@ -68,5 +72,8 @@
         android:layout_height="wrap_content"
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="ivPhoto,tvUserCompany" />
-
+    <Space
+        android:layout_width="wrap_content"
+        android:layout_height="6dp"
+        app:layout_constraintTop_toBottomOf="@id/barrier" />
 </androidx.constraintlayout.widget.ConstraintLayout>

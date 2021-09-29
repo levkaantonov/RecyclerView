@@ -1,17 +1,22 @@
 package levkaantonov.com.study.recyclerview.model
 
 import com.github.javafaker.Faker
+import levkaantonov.com.study.recyclerview.UserNotFoundException
+import levkaantonov.com.study.recyclerview.tasks.SimpleTask
+import levkaantonov.com.study.recyclerview.tasks.Task
 import java.util.*
+import java.util.concurrent.Callable
 
 typealias UsersListener = (users: List<User>) -> Unit
 
 class UserService {
 
     private var users = mutableListOf<User>()
-
+    private var loaded = false
     private val listeners = mutableSetOf<UsersListener>()
 
-    init {
+    fun loadUsers(): Task<Unit> = SimpleTask<Unit>(Callable {
+        Thread.sleep(2000L)
         val faker = Faker.instance()
         IMAGES.shuffle()
         users = (1..100).map {
@@ -22,32 +27,42 @@ class UserService {
                 photo = IMAGES[it % IMAGES.size]
             )
         }.toMutableList()
-    }
+        loaded = true
+        notifyChanges()
+    })
 
-    fun getUsers(): List<User> {
-        return users
-    }
+    fun getById(id: Long): Task<UserDetails> = SimpleTask<UserDetails>(Callable {
+        Thread.sleep(2000L)
+        val user = users.firstOrNull { it.id == id } ?: UserNotFoundException()
+        return@Callable UserDetails(
+            user = user as User,
+            details = Faker.instance().lorem().paragraphs(3).joinToString("\n\n")
+        )
+    })
 
-    fun deleteUser(user: User) {
+    fun deleteUser(user: User): Task<Unit> = SimpleTask<Unit>(Callable {
+        Thread.sleep(2000L)
         val index = users.indexOfFirst { it.id == user.id }
         if (index != -1) {
             users.removeAt(index)
             notifyChanges()
         }
-    }
+    })
 
-    fun moveUser(user: User, moveBy: Int) {
+    fun moveUser(user: User, moveBy: Int): Task<Unit> = SimpleTask<Unit>(Callable {
         val oldIndex = users.indexOfFirst { it.id == user.id }
-        if (oldIndex == -1) return
+        if (oldIndex == -1) return@Callable
         val newIndex = oldIndex + moveBy
-        if (newIndex < 0 || newIndex >= users.size) return
+        if (newIndex < 0 || newIndex >= users.size) return@Callable
         Collections.swap(users, oldIndex, newIndex)
         notifyChanges()
-    }
+    })
 
     fun addListener(listener: UsersListener) {
         listeners.add(listener)
-        listener.invoke(users)
+        if (loaded) {
+            listener.invoke(users)
+        }
     }
 
     fun removeListener(listener: UsersListener) {
@@ -55,6 +70,9 @@ class UserService {
     }
 
     private fun notifyChanges() {
+        if(!loaded) {
+            return
+        }
         listeners.forEach { it.invoke(users) }
     }
 

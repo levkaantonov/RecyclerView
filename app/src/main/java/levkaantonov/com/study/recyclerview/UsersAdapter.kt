@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import levkaantonov.com.study.recyclerview.databinding.ItemUserBinding
 import levkaantonov.com.study.recyclerview.model.User
+import levkaantonov.com.study.recyclerview.screens.UserListItem
 
 
 interface UserActionListener {
@@ -23,7 +24,7 @@ interface UserActionListener {
 class UsersAdapter(private val actionListener: UserActionListener) :
     RecyclerView.Adapter<UsersAdapter.UserViewHolder>(), View.OnClickListener {
 
-    var users: List<User> = emptyList()
+    var users: List<UserListItem> = emptyList()
         set(value) {
             field = value
             notifyDataSetChanged()
@@ -45,7 +46,7 @@ class UsersAdapter(private val actionListener: UserActionListener) :
         val popupMenu = PopupMenu(v.context, v)
         val context = v.context
         val user = v.tag as User
-        val position = users.indexOfFirst { it.id == user.id }
+        val position = users.indexOfFirst { it.user.id == user.id }
 
         popupMenu.apply {
             menu.add(0, ID_MOVE_UP, Menu.NONE, context.getString(R.string.popup_menu_move_up))
@@ -91,7 +92,7 @@ class UsersAdapter(private val actionListener: UserActionListener) :
         val inflater = LayoutInflater.from(parent.context)
         val binding = ItemUserBinding.inflate(inflater, parent, false)
 
-        binding.root.setOnClickListener(this)
+
         binding.ivMoreButton.setOnClickListener(this)
 
         return UserViewHolder(binding)
@@ -99,7 +100,7 @@ class UsersAdapter(private val actionListener: UserActionListener) :
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         val user = users[position]
-        holder.bind(user)
+        holder.bind(user, this)
     }
 
     override fun getItemCount(): Int = users.size
@@ -108,10 +109,21 @@ class UsersAdapter(private val actionListener: UserActionListener) :
         private val binding: ItemUserBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(user: User) {
+        fun bind(userListItem: UserListItem, actionListener: View.OnClickListener) {
+            val user = userListItem.user
             this.itemView.tag = user
+            binding.ivMoreButton.tag = user
+
             with(binding) {
-                ivMoreButton.tag = user
+                if (userListItem.isInProgress) {
+                    ivMoreButton.visibility = View.INVISIBLE
+                    progressBar.visibility = View.VISIBLE
+                    binding.root.setOnClickListener(null)
+                } else {
+                    ivMoreButton.visibility = View.VISIBLE
+                    progressBar.visibility = View.GONE
+                    binding.root.setOnClickListener(actionListener)
+                }
                 tvUserName.text = user.name
                 tvUserCompany.text = user.company
                 if (user.photo.isNotBlank()) {

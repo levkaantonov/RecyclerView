@@ -1,51 +1,59 @@
 package levkaantonov.com.study.recyclerview
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import levkaantonov.com.study.recyclerview.databinding.ActivityMainBinding
 import levkaantonov.com.study.recyclerview.model.User
-import levkaantonov.com.study.recyclerview.model.UserService
-import levkaantonov.com.study.recyclerview.model.UsersListener
+import levkaantonov.com.study.recyclerview.screens.UserDetailsFragment
+import levkaantonov.com.study.recyclerview.screens.UsersListFragment
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : AppCompatActivity(), Navigator {
     private lateinit var binding: ActivityMainBinding
-    private var adapter: UsersAdapter? = null
-    private val usersService: UserService
-        get() = (application as App).userService
-    private val listener: UsersListener = {
-        adapter?.users = it
-    }
+
+    private val actions = mutableListOf<() -> Unit>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        adapter = UsersAdapter(object : UserActionListener {
-            override fun onUserMove(user: User, moveBy: Int) {
-                usersService.moveUser(user, moveBy)
-            }
-
-            override fun onUserDelete(user: User) {
-                usersService.deleteUser(user)
-            }
-
-            override fun onUserDetails(user: User) {
-                Toast.makeText(this@MainActivity, "User ${user.name}", Toast.LENGTH_SHORT).show()
-            }
-        })
-
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = adapter
-
-        usersService.addListener(listener)
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .add(binding.fragmentContainerView.id, UsersListFragment())
+                .commit()
+        }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        usersService.removeListener(listener)
+    override fun onResume() {
+        super.onResume()
+        actions.forEach { it() }
+        actions.clear()
+    }
+
+    private fun runWhenActive(action: () -> Unit) {
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            action()
+        } else {
+            actions += action
+        }
+    }
+
+    override fun showDetails(user: User) {
+        runWhenActive {
+            supportFragmentManager.beginTransaction()
+                .addToBackStack(null)
+                .replace(binding.fragmentContainerView.id, UserDetailsFragment.newInstance(user.id))
+                .commit()
+        }
+    }
+
+    override fun goBack() {
+        runWhenActive { onBackPressed() }
+    }
+
+    override fun toast(messagesRes: Int) {
+        Toast.makeText(this, messagesRes, Toast.LENGTH_SHORT).show()
     }
 }

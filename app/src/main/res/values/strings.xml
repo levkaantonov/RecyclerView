@@ -3,4 +3,12 @@
     <string name="popup_menu_move_up">Move Up</string>
     <string name="popup_menu_move_down">Move Down</string>
     <string name="popup_menu_remove">Move Up</string>
+    <string name="failed_to_load_users">Failed to load users</string>
+    <string name="try_again">try again</string>
+    <string name="no_users">no users</string>
+    <string name="user_deleted">user has been deleted</string>
+    <string name="error_loading_of_user_details">Can\'t load user details</string>
+    <string name="success_deleting_user">user_deleted</string>
+    <string name="error_deleting_user">cant\'t deleted user</string>
+    <string name="cant_move_user">can\'t move user</string>
 </resources>
