@@ -4,14 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
-import levkaantonov.com.study.recyclerview.UserActionListener
 import levkaantonov.com.study.recyclerview.UsersAdapter
 import levkaantonov.com.study.recyclerview.databinding.FragmentUsersListBinding
-import levkaantonov.com.study.recyclerview.model.User
 import levkaantonov.com.study.recyclerview.tasks.EmptyResult
 import levkaantonov.com.study.recyclerview.tasks.ErrorResult
 import levkaantonov.com.study.recyclerview.tasks.PendingResult
@@ -43,7 +41,7 @@ class UsersListFragment : Fragment() {
             when (it) {
                 is SuccessResult -> {
                     binding.recyclerView.visibility = View.VISIBLE
-                    adapter?.users = it.data
+                    adapter?.userListItems = it.data
                 }
                 is ErrorResult -> {
                     binding.tryAgainContainer.visibility = View.VISIBLE
@@ -66,9 +64,12 @@ class UsersListFragment : Fragment() {
             it.getValue()?.let { messageRes -> navigator().toast(messageRes) }
         }
 
-
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
+        val itemAnimator = binding.recyclerView.itemAnimator
+        if (itemAnimator is DefaultItemAnimator) {
+            itemAnimator.supportsChangeAnimations = false
+        }
     }
 
     private fun hideAll() {

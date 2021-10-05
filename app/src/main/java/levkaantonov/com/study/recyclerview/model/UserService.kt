@@ -6,6 +6,7 @@ import levkaantonov.com.study.recyclerview.tasks.SimpleTask
 import levkaantonov.com.study.recyclerview.tasks.Task
 import java.util.*
 import java.util.concurrent.Callable
+import kotlin.collections.ArrayList
 
 typealias UsersListener = (users: List<User>) -> Unit
 
@@ -15,8 +16,8 @@ class UserService {
     private var loaded = false
     private val listeners = mutableSetOf<UsersListener>()
 
-    fun loadUsers(): Task<Unit> = SimpleTask<Unit>(Callable {
-        Thread.sleep(2000L)
+    fun loadUsers(): Task<Unit> = SimpleTask {
+        sleepOnHalfSecond()
         val faker = Faker.instance()
         IMAGES.shuffle()
         users = (1..100).map {
@@ -29,32 +30,45 @@ class UserService {
         }.toMutableList()
         loaded = true
         notifyChanges()
-    })
+    }
 
-    fun getById(id: Long): Task<UserDetails> = SimpleTask<UserDetails>(Callable {
-        Thread.sleep(2000L)
+    fun getById(id: Long): Task<UserDetails> = SimpleTask {
+        sleepOnHalfSecond()
         val user = users.firstOrNull { it.id == id } ?: UserNotFoundException()
-        return@Callable UserDetails(
+        UserDetails(
             user = user as User,
             details = Faker.instance().lorem().paragraphs(3).joinToString("\n\n")
         )
-    })
+    }
 
-    fun deleteUser(user: User): Task<Unit> = SimpleTask<Unit>(Callable {
-        Thread.sleep(2000L)
-        val index = users.indexOfFirst { it.id == user.id }
+    fun deleteUser(user: User): Task<Unit> = SimpleTask {
+        sleepOnHalfSecond()
+        val index = findIndexById(user.id)
         if (index != -1) {
+            users = ArrayList(users)
             users.removeAt(index)
             notifyChanges()
         }
-    })
+    }
 
-    fun moveUser(user: User, moveBy: Int): Task<Unit> = SimpleTask<Unit>(Callable {
-        val oldIndex = users.indexOfFirst { it.id == user.id }
+    fun moveUser(user: User, moveBy: Int): Task<Unit> = SimpleTask(Callable {
+        sleepOnHalfSecond()
+        val oldIndex = findIndexById(user.id)
         if (oldIndex == -1) return@Callable
         val newIndex = oldIndex + moveBy
         if (newIndex < 0 || newIndex >= users.size) return@Callable
+        users = ArrayList(users)
         Collections.swap(users, oldIndex, newIndex)
+        notifyChanges()
+    })
+
+    fun fireUser(user: User): Task<Unit> = SimpleTask(Callable {
+        sleepOnHalfSecond()
+        val index = findIndexById(user.id)
+        if (index == -1) return@Callable
+        val updatedUser = users[index].copy(company = "")
+        users = ArrayList(users)
+        users[index] = updatedUser
         notifyChanges()
     })
 
@@ -70,11 +84,15 @@ class UserService {
     }
 
     private fun notifyChanges() {
-        if(!loaded) {
+        if (!loaded) {
             return
         }
         listeners.forEach { it.invoke(users) }
     }
+
+    private fun sleepOnHalfSecond() = Thread.sleep(500L)
+
+    private fun findIndexById(userId: Long): Int = users.indexOfFirst { it.id == userId }
 
     companion object {
         private val IMAGES = mutableListOf(

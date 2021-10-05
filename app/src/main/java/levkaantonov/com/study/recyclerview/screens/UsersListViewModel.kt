@@ -10,6 +10,7 @@ import levkaantonov.com.study.recyclerview.model.UsersListener
 import levkaantonov.com.study.recyclerview.tasks.*
 
 data class UserListItem(
+    val id: Long,
     val user: User,
     val isInProgress: Boolean
 )
@@ -26,9 +27,6 @@ class UsersListViewModel(
 
     private val _actionShowToast = MutableLiveData<Event<Int>>()
     val actionShowToast: LiveData<Event<Int>> = _actionShowToast
-
-    private val _actionGoBack = MutableLiveData<Event<Unit>>()
-    val actionGoBack: LiveData<Event<Unit>> = _actionGoBack
 
     private val userIdsInProgress = mutableListOf<Long>()
     private var usersResult: Result<List<User>> = EmptyResult()
@@ -51,9 +49,7 @@ class UsersListViewModel(
     private fun loadUsers() {
         usersResult = PendingResult()
         userService.loadUsers()
-            .onError {
-                usersResult = ErrorResult(it)
-            }
+            .onError { usersResult = ErrorResult(it) }
             .autoCancel()
     }
 
@@ -61,9 +57,7 @@ class UsersListViewModel(
         if (isInProgress(user)) return
         addProgressTo(user)
         userService.moveUser(user, moveBy)
-            .onSuccess {
-                removeProgressFrom(user)
-            }
+            .onSuccess { removeProgressFrom(user) }
             .onError {
                 removeProgressFrom(user)
                 _actionShowToast.value = Event(R.string.cant_move_user)
@@ -72,17 +66,32 @@ class UsersListViewModel(
     }
 
     override fun onUserDelete(user: User) {
-        if (isInProgress(user)) return
+        if (isInProgress(user)) {
+            return
+        }
         addProgressTo(user)
-        userService.deleteUser(user)
-            .onSuccess {
-                removeProgressFrom(user)
-            }
+        userService
+            .deleteUser(user)
+            .onSuccess { removeProgressFrom(user) }
             .onError {
                 removeProgressFrom(user)
                 _actionShowToast.value = Event(R.string.error_deleting_user)
             }
             .autoCancel()
+    }
+
+    override fun onUserFire(user: User) {
+        if (isInProgress(user)) {
+            return
+        }
+        addProgressTo(user)
+        userService
+            .fireUser(user)
+            .onSuccess { removeProgressFrom(user) }
+            .onError {
+                removeProgressFrom(user)
+                _actionShowToast.value = Event(R.string.cant_fire)
+            }.autoCancel()
     }
 
     override fun onUserDetails(user: User) {
@@ -105,7 +114,9 @@ class UsersListViewModel(
 
     private fun notifyUpdates() {
         _users.postValue(usersResult.map { users ->
-            users.map { user -> UserListItem(user, isInProgress(user)) }
+            users.map { user ->
+                UserListItem(user.id, user, isInProgress(user))
+            }
         })
     }
 
