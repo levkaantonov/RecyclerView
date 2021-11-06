@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupMenu
+import androidx.appcompat.widget.CustomPopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -56,7 +56,7 @@ class UsersAdapter(private val actionListener: UserActionListener) :
     }
 
     private fun showPopupMenu(v: View) {
-        val popupMenu = PopupMenu(v.context, v)
+        val popupMenu = CustomPopupMenu(v.context, v)
         val context = v.context
         val user = v.tag as User
         val position = userListItems.indexOfFirst { it.user.id == user.id }
@@ -64,12 +64,22 @@ class UsersAdapter(private val actionListener: UserActionListener) :
         popupMenu.apply {
             with(menu) {
                 add(0, ID_MOVE_UP, Menu.NONE, context.getString(R.string.popup_menu_move_up))
-                    .apply { isEnabled = position > 0 }
+                    .apply {
+                        isEnabled = position > 0
+                        setIcon(R.drawable.ic_action_up)
+                    }
                 add(0, ID_MOVE_DOWN, Menu.NONE, context.getString(R.string.popup_menu_move_down))
-                    .apply { isEnabled = position < userListItems.size - 1 }
-                add(0, ID_REMOVE, Menu.NONE, context.getString(R.string.popup_menu_remove))
+                    .apply {
+                        isEnabled = position < userListItems.size - 1
+                        setIcon(R.drawable.ic_action_down)
+                    }
+                add(0, ID_REMOVE, Menu.NONE, context.getString(R.string.popup_menu_remove)).apply {
+                    setIcon(R.drawable.ic_action_delete)
+                }
                 if (user.company.isNotBlank()) {
-                    add(0, ID_FIRE, Menu.NONE, context.getString(R.string.fire))
+                    add(0, ID_FIRE, Menu.NONE, context.getString(R.string.fire)).apply {
+                        setIcon(R.drawable.ic_action_fire)
+                    }
                 }
             }
             setOnMenuItemClickListener {
